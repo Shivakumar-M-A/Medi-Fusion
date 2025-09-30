@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Registration</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .flash-messages {
+            list-style: none;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .back-link {
+            display: block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Doctor Registration</h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label for="name">Name:</label>
+            <input type="text" name="name" placeholder="Enter your name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" placeholder="Enter your email" required>
+
+            <label for="password">Password:</label>
+            <input type="password" name="password" placeholder="Enter a secure password" required>
+
+            <label for="contact_number">Contact Number:</label>
+            <input type="tel" name="contact_number" placeholder="Enter your contact number" pattern="[0-9]{10}" required>
+
+            <label for="specialization">Specialization:</label>
+            <input type="text" name="specialization" placeholder="Your specialization" required>
+
+            <label for="availability_status">Availability Status:</label>
+            <select name="availability_status" required>
+                <option value="Available">Available</option>
+            </select>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <a href="{{ url_for('home') }}" class="back-link">Back to Home</a>
+    </div>
+</body>
+</html>

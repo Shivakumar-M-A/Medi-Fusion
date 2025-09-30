@@ -87,13 +87,30 @@ app.post('/api/patient/login', async (req, res) => {
 app.post('/api/doctor/register', async (req, res) => {
     try {
         const { name, email, password, contact_number, specialization, availability_status, hospital_name } = req.body;
+
+        // Basic validation
+        if (!name || !email || !password || !contact_number || !specialization || !availability_status || !hospital_name) {
+            return res.status(400).json({ error: 'All fields are required.' });
+        }
+
         const [existing] = await db.query('SELECT email FROM doctor WHERE email = ?', [email]);
-        if (existing.length > 0) return res.status(409).json({ error: 'A doctor with this email already exists.' });
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'A doctor with this email already exists.' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const [result] = await db.query( 'INSERT INTO doctor (name, email, password, contact_number, specialization, availability_status, hospital_name) VALUES (?, ?, ?, ?, ?, ?, ?)', [name, email, hashedPassword, contact_number, specialization, availability_status, hospital_name] );
+        const [result] = await db.query(
+            'INSERT INTO doctor (name, email, password, contact_number, specialization, availability_status, hospital_name) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [name, email, hashedPassword, contact_number, specialization, availability_status, hospital_name]
+        );
+
         res.status(201).json({ message: 'Doctor registered successfully!', doctorId: result.insertId });
-    } catch (error) { res.status(500).json({ error: 'Database error during doctor registration.' }); }
+    } catch (error) {
+        console.error('Registration error:', error); // <-- This helps you debug
+        res.status(500).json({ error: 'Database error during doctor registration.' });
+    }
 });
+
 app.post('/api/doctor/login', async (req, res) => {
     try {
         const { email, password } = req.body;

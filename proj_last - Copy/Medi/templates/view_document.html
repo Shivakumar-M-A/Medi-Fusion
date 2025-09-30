@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracted Text</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f4f6f9; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 50px auto; 
+            background-color: #fff; 
+            padding: 30px; 
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); 
+            border-radius: 12px; 
+        }
+        h2 { 
+            font-size: 2rem; 
+            margin-bottom: 20px; 
+            color: #2c3e50;
+        }
+        pre { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            background-color: #f9fafb; 
+            padding: 20px; 
+            border-radius: 8px;
+            border: 1px solid #ddd; 
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #3498db;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Extracted Text from Document</h2>
+        <pre>{{ text }}</pre>
+        <a href="{{ request.referrer }}" class="btn">&#8592; Back</a>
+    </div>
+</body>
+</html>

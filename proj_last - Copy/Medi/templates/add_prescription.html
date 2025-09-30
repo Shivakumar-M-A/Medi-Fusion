@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Prescription</title>
+</head>
+<body>
+    <h1>Add Prescription for Patient ID: {{ patient_id }}</h1>
+    <form method="POST">
+        <label for="diagnosis">Diagnosis:</label>
+        <textarea name="diagnosis" placeholder="Diagnosis" required></textarea><br>
+
+        <label for="prescription_details">Prescription Details:</label>
+        <textarea name="prescription_details" placeholder="Prescription Details" required></textarea><br>
+
+        <button type="submit">Submit Prescription</button>
+    </form>
+</body>
+</html>
