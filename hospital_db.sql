@@ -77,7 +77,8 @@ CREATE TABLE `doctor` (
   `email` varchar(100) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   `contact_number` varchar(15) DEFAULT NULL,
-  `availability_status` varchar(20) DEFAULT NULL
+  `availability_status` varchar(20) DEFAULT NULL,
+  `hospital_name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 

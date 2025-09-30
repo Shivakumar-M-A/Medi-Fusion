@@ -102,7 +102,7 @@ app.post('/api/doctor/login', async (req, res) => {
         const doctor = rows[0];
         const isMatch = await bcrypt.compare(password, doctor.password);
         if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
-        const token = jwt.sign({ id: doctor.doctor_id, type: 'doctor', name: doctor.name }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: doctor.doctor_id, type: 'doctor', name: doctor.name, hospital_name: doctor.hospital_name }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     } catch (error) { res.status(500).json({ error: 'Server error during login.' }); }
 });
@@ -178,13 +178,25 @@ app.get('/api/my-patient-appointments', authenticateToken, async (req, res) => {
 });
 
 
-// [HOSPITAL] Get all appointments
+// [HOSPITAL] Get all appointments for that hospital
 app.get('/api/all-appointments', authenticateToken, async (req, res) => {
-     if (req.user.type !== 'hospital') return res.status(403).json({ error: 'Forbidden' });
+    if (req.user.type !== 'hospital') return res.status(403).json({ error: 'Forbidden' });
     try {
-        const [appointments] = await db.query(`SELECT a.*, p.name AS patient_name, d.name AS doctor_name FROM appointment a JOIN patient p ON a.patient_id = p.patient_id JOIN doctor d ON a.doctor_id = d.doctor_id ORDER BY a.appointment_time DESC`);
+        const hospitalName = req.user.name; // Get hospital name from JWT
+        const [appointments] = await db.query(`
+            SELECT a.*, p.name AS patient_name, d.name AS doctor_name 
+            FROM appointment a 
+            JOIN patient p ON a.patient_id = p.patient_id 
+            JOIN doctor d ON a.doctor_id = d.doctor_id 
+            WHERE d.hospital_name = ? 
+            ORDER BY a.appointment_time DESC`,
+            [hospitalName]
+        );
         res.json(appointments);
-    } catch (error) { res.status(500).json({ error: 'Failed to fetch appointments.' }); }
+    } catch (error) { 
+        console.error("Error fetching appointments for hospital:", error);
+        res.status(500).json({ error: 'Failed to fetch appointments.' }); 
+    }
 });
 
 // [HOSPITAL] Update appointment status
