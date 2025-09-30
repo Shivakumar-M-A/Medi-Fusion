@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hospital Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+        .dashboard-header h1 { font-weight: 700; color: #007bff; }
+        .card { border-radius: 1rem; box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .table-hover tbody tr:hover { background-color: #e9ecef; cursor: pointer; }
+        .btn-approve { background-color: #28a745; border-color: #28a745; }
+        .btn-reject { background-color: #dc3545; border-color: #dc3545; }
+        .status-badge { font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <header class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+            <h1 id="hospital-name">Hospital Dashboard</h1>
+            <button id="logout-btn" class="btn btn-outline-danger">Logout</button>
+        </header>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Appointment Requests</h2>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Appointment ID</th>
+                                <th>Patient Name</th>
+                                <th>Doctor Name</th>
+                                <th>Appointment Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointments-table-body">
+                            <!-- Data will be loaded here via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/hospital_login.html';
+                return;
+            }
+             try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('hospital-name').textContent = `${payload.name} Dashboard`;
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+            }
+
+            loadAppointments();
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/index.html';
+            });
+        });
+
+        function loadAppointments() {
+            const token = localStorage.getItem('token');
+            fetch('/api/all-appointments', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(appointments => {
+                const tableBody = document.getElementById('appointments-table-body');
+                tableBody.innerHTML = '';
+                if (appointments.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4">No appointment requests found.</td></tr>';
+                } else {
+                    appointments.forEach(app => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('id', `row-${app.appointment_id}`);
+                        
+                        let statusBadge;
+                        switch(app.status.toLowerCase()) {
+                            case 'approved': statusBadge = `<span class="badge bg-success status-badge">Approved</span>`; break;
+                            case 'rejected': statusBadge = `<span class="badge bg-danger status-badge">Rejected</span>`; break;
+                            default: statusBadge = `<span class="badge bg-warning text-dark status-badge">Pending</span>`;
+                        }
+
+                        let actionButtons = '';
+                        if (app.status.toLowerCase() === 'pending') {
+                            actionButtons = `
+                                <button onclick="updateStatus(${app.appointment_id}, 'Approved')" class="btn btn-approve btn-sm text-white">Approve</button>
+                                <button onclick="updateStatus(${app.appointment_id}, 'Rejected')" class="btn btn-reject btn-sm text-white">Reject</button>
+                            `;
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${app.appointment_id}</td>
+                            <td>${app.patient_name}</td>
+                            <td>Dr. ${app.doctor_name}</td>
+                            <td>${new Date(app.appointment_time).toLocaleString()}</td>
+                            <td class="status-cell">${statusBadge}</td>
+                            <td class="action-cell">${actionButtons}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            });
+        }
+
+        function updateStatus(appointmentId, newStatus) {
+            const token = localStorage.getItem('token');
+            fetch(`/api/appointments/${appointmentId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Visually update the row without a full reload
+                const row = document.getElementById(`row-${appointmentId}`);
+                if (row) {
+                    const statusCell = row.querySelector('.status-cell');
+                    const actionCell = row.querySelector('.action-cell');
+                    let newBadge = newStatus === 'Approved' 
+                        ? `<span class="badge bg-success status-badge">Approved</span>`
+                        : `<span class="badge bg-danger status-badge">Rejected</span>`;
+                    statusCell.innerHTML = newBadge;
+                    actionCell.innerHTML = ''; // Remove buttons
+                }
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                alert('Failed to update status.');
+            });
+        }
+    </script>
+</body>
+</html>

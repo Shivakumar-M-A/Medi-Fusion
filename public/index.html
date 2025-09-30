@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Medi Fusion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Full CSS from before including footer fixes */
+    body {
+      background: #111217;
+      color: #fff;
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    nav {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(20, 20, 22, 0.97);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 14px 30px;
+      animation: dropDown 0.9s cubic-bezier(0.4, 2, 0.3, 1) 0.1s forwards;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 22px;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li a {
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 4px 14px;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    nav ul li a::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #22e57f, #2e3ef7);
+      transition: left 0.3s ease;
+    }
+    nav ul li a:hover::after,
+    nav ul li a.active::after,
+    nav ul li a[aria-current="page"]::after {
+      left: 0;
+    }
+    nav ul li a:hover,
+    nav ul li a.active,
+    nav ul li a[aria-current="page"] {
+      color: #22e57f;
+    }
+    header {
+      background: radial-gradient(circle at 40% 15%, #25303b 10%, #0d1420 80%);
+      padding: 150px 20px 100px;
+      text-align: center;
+      animation: fadeInScale 1.2s ease forwards;
+    }
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    header h1 {
+      font-weight: 900;
+      font-size: 3.6rem;
+      background: linear-gradient(92deg, #22e57f, #5d4fff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      opacity: 0.85;
+      color: #a9b9c6;
+    }
+    .btn-cta {
+      background: linear-gradient(90deg, #22db78, #2e3ef7);
+      padding: 14px 40px;
+      border-radius: 28px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: white;
+      box-shadow: 0 8px 30px #22e57f66;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      display: inline-block;
+    }
+    .btn-cta:hover {
+      background: linear-gradient(90deg, #2bcf6f, #4a5bff);
+      transform: scale(1.05);
+      box-shadow: 0 14px 40px #1af57f88;
+    }
+    section {
+      max-width: 1200px;
+      margin: 60px auto 80px;
+      padding: 0 20px;
+    }
+    section h2 {
+      font-weight: 900;
+      font-size: 2.8rem;
+      text-align: center;
+      margin-bottom: 40px;
+      color: #22e57f;
+      letter-spacing: 0.05em;
+      position: relative;
+    }
+    section h2::after {
+      content: "";
+      display: block;
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #22e57f, #4a5bff);
+      border-radius: 12px;
+      margin: 12px auto 0;
+    }
+    .feature-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
+    .feature-card {
+      background: #1d2330;
+      border-radius: 20px;
+      width: 270px;
+      padding: 18px 20px 40px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 0 10px #35f2a888,
+        inset 0 -8px 40px #2e4aff66;
+      text-align: center;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .feature-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 35px #22e57f88, inset 0 0 18px #22e57fbb,
+        inset 0 -12px 50px #2e4affcc;
+    }
+    .feature-card img {
+        max-height: 145px;
+        border-radius: 18px;
+        margin-bottom: 12px;
+    }
+    .feature-card .plugin-title {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+      color: #22e57f;
+    }
+    .feature-card .plugin-desc {
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #abb8d9;
+    }
+    #contact {
+      max-width: 600px;
+      margin: 0 auto 100px;
+    }
+    #contact form label {
+      color: #3ce184;
+      font-weight: 700;
+      margin-top: 14px;
+      display: block;
+    }
+    #contact form input,
+    #contact form textarea {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 6px;
+      background: #111920;
+      border: 1.5px solid #19262e;
+      border-radius: 12px;
+      color: #b5c2db;
+      font-size: 1rem;
+      font-family: "Poppins", sans-serif;
+      transition: border-color 0.25s ease;
+      resize: vertical;
+    }
+    #contact form input:focus,
+    #contact form textarea:focus {
+      outline: none;
+      border-color: #22e57f;
+      box-shadow: 0 0 8px #22e57f77;
+    }
+    #contact form button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px 0;
+      background: linear-gradient(90deg, #22db78, #2e3ef7);
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 32px;
+      cursor: pointer;
+      transition: background 0.35s ease, transform 0.35s ease;
+    }
+    #contact form button:hover {
+      background: linear-gradient(90deg, #2bcf6f, #4a5bff);
+      transform: scale(1.05);
+    }
+    footer {
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+        background: #1d2330;
+    }
+    /* Simple message div for feedback */
+    #contact-message {
+        text-align: center;
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        display: none; /* Hidden by default */
+    }
+    .success-message {
+        background-color: #28a745;
+        color: white;
+    }
+    .error-message {
+        background-color: #dc3545;
+        color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul id="navLinks">
+      <li><a href="#home" class="active">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="/patient_register.html">Patient Register</a></li>
+      <li><a href="/patient_login.html">Patient Login</a></li>
+      <li><a href="/doctor_login.html">Doctor Login</a></li>
+      <li><a href="/doctor_register.html">Doctor Register</a></li>
+      <li><a href="/hospital_login.html">Hospital Login</a></li>
+      <li><a href="/hospital_register.html">Hospital Register</a></li>
+    </ul>
+  </nav>
+
+  <header id="home">
+    <h1>Medi Fusion</h1>
+    <p>Your Trusted Medical Management System</p>
+    <a href="/patient_login.html" class="btn-cta">Book an Appointment</a>
+  </header>
+
+  <section id="about">
+    <h2>About Medi Fusion</h2>
+    <p>Medi Fusion is a comprehensive healthcare management platform designed to integrate patient, doctor, and administrative functionalities into a seamless experience.</p>
+  </section>
+
+  <section id="features" class="card-section">
+    <h2>Most Popular Features</h2>
+    <div class="feature-cards" id="featureCards">
+      <div class="feature-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/3601/3601003.png" alt="Patient Registration" />
+        <div class="plugin-title">Online Registration</div>
+        <div class="plugin-desc">Register anywhere at any time with instant email verification.</div>
+      </div>
+       <div class="feature-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/2764/2764463.png" alt="Doctor Login" />
+        <div class="plugin-title">Doctor Login</div>
+        <div class="plugin-desc">Secure and reliable doctor interface for managing appointments.</div>
+      </div>
+      <div class="feature-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin Dashboard" />
+        <div class="plugin-title">Admin Dashboard</div>
+        <div class="plugin-desc">Powerful admin tools for user and appointment management.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Contact Us</h2>
+    <!-- Updated Form -->
+    <form id="contact-form">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" placeholder="Your full name" required />
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" placeholder="Your email" required />
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" rows="6" placeholder="Type your message..." required></textarea>
+      <button type="submit">Send</button>
+    </form>
+    <!-- Message display area -->
+    <div id="contact-message"></div>
+  </section>
+
+  <footer>
+    <p>© 2025 Medi Fusion. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // --- Contact Form Submission ---
+    const contactForm = document.getElementById('contact-form');
+    const contactMessage = document.getElementById('contact-message');
+
+    contactForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Stop the default page reload
+
+        const formData = new FormData(contactForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            contactMessage.style.display = 'block'; // Make the message div visible
+            if (response.ok) {
+                contactMessage.textContent = result.message;
+                contactMessage.className = 'success-message';
+                contactForm.reset(); // Clear the form
+            } else {
+                contactMessage.textContent = result.error || 'An error occurred.';
+                contactMessage.className = 'error-message';
+            }
+        } catch (error) {
+            contactMessage.style.display = 'block';
+            contactMessage.textContent = 'Failed to send message. Please try again later.';
+            contactMessage.className = 'error-message';
+        }
+    });
+  </script>
+</body>
+</html>
+
