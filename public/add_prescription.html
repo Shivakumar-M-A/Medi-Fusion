@@ -1,78 +1,91 @@
 <form id="add-prescription-form">
     <div class="form-group">
         <label for="patient_id">Patient ID</label>
-        <input type="text" id="patient_id" name="patient_id" readonly required>
+        <input type="text" class="form-control" id="patient_id" name="patient_id" readonly required>
     </div>
 
-    <div class="form-group">
+    <div class="form-group mt-3">
         <label for="disease">Diagnosis/Disease</label>
-        <input type="text" id="disease" name="disease" required placeholder="e.g., Common Cold, Hypertension">
+        <input type="text" class="form-control" id="disease" name="disease" required placeholder="e.g., Common Cold, Hypertension">
     </div>
 
-    <div class="form-group">
+    <div class="form-group mt-3">
         <label for="text">Prescription Text</label>
-        <textarea id="text" name="text" rows="6" placeholder="Write full prescription here (e.g., Paracetamol 500mg, twice a day for 3 days.)" required></textarea>
+        <textarea class="form-control" id="text" name="text" rows="6" placeholder="Write full prescription here (e.g., Paracetamol 500mg, twice a day for 3 days.)" required></textarea>
     </div>
     
-    <button type="submit" id="submit-btn">Record Prescription</button>
+    <button type="submit" id="submit-btn" class="btn btn-primary mt-4">Record Prescription</button>
 
-    <div id="message" style="display: none;"></div>
-    <a href="doctor_dashboard.html" class="back-link">← Back to Dashboard</a>
+    <div id="message" class="mt-3" style="display: none;"></div>
+    <a href="doctor_dashboard.html" class="d-block mt-3">← Back to Dashboard</a>
 </form>
 
 <script>
-    // ... (omitted setup and token check) ...
-    
-    const form = document.getElementById('add-prescription-form');
-    form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submit-btn');
-        const msgDiv = document.getElementById('message');
-        
-        // 🛠️ UPDATED: Simplified validation to only check for text
-        if (!form.text.value) {
-            alert("Please provide the prescription text.");
+    document.addEventListener('DOMContentLoaded', function() {
+        // ✅ ADDED: Get patient_id from URL and populate the form
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('patient_id');
+        if (patientId) {
+            document.getElementById('patient_id').value = patientId;
+        } else {
+            alert("No Patient ID found. Please go back to the dashboard and select a patient.");
+            window.location.href = 'doctor_dashboard.html';
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Authentication token not found. Please log in.");
             return;
         }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
-        msgDiv.style.display = 'none';
-        msgDiv.className = 'message';
         
-        const formData = new FormData(form);
-        
-        // Remove the unused file entry just in case it's still being created
-        formData.delete('file');
+        const form = document.getElementById('add-prescription-form');
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submit-btn');
+            const msgDiv = document.getElementById('message');
 
-        try {
-            const resp = await fetch('/api/prescription', { 
-                method: 'POST', 
-                body: formData,
-                headers: {
-                     'Authorization': `Bearer ${localStorage.getItem('token')}`
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting to Blockchain...';
+            msgDiv.style.display = 'none';
+            msgDiv.className = '';
+
+            // ✅ CHANGED: Create a plain JavaScript object for the JSON payload
+            const formData = {
+                patientId: form.patient_id.value,
+                disease: form.disease.value,
+                text: form.text.value
+            };
+
+            try {
+                // ✅ CHANGED: Fetch now sends a JSON body instead of FormData
+                const resp = await fetch('/api/prescription', { 
+                    method: 'POST', 
+                    headers: {
+                         'Authorization': `Bearer ${token}`,
+                         'Content-Type': 'application/json' // Set content type to JSON
+                    },
+                    body: JSON.stringify(formData) // Convert the JS object to a JSON string
+                });
+
+                const res = await resp.json();
+
+                if(resp.ok && res.success) {
+                    msgDiv.textContent = `Prescription stored successfully! TxHash: ${res.transactionHash}`;
+                    msgDiv.className = 'alert alert-success';
+                    form.disease.value = '';
+                    form.text.value = '';
+                } else {
+                    throw new Error(res.error || 'An unknown error occurred.');
                 }
-            });
-
-            const res = await resp.json();
-
-            if(resp.ok && res.success) {
-                // 🛠️ UPDATED: Removed reference to 'CID' since it's now internal/placeholder
-                msgDiv.textContent = 'Prescription stored successfully on the blockchain!';
-                msgDiv.classList.add('success');
-                form.disease.value = '';
-                form.text.value = '';
-            } else {
-                throw new Error(res.error || 'An unknown error occurred.');
+            } catch (error) {
+                msgDiv.textContent = 'Error: ' + error.message;
+                msgDiv.className = 'alert alert-danger';
+            } finally {
+                msgDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Record Prescription';
             }
-        } catch (error) {
-            msgDiv.textContent = 'Error: ' + error.message;
-            msgDiv.classList.add('error');
-        } finally {
-            msgDiv.style.display = 'block';
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Record Prescription';
-        }
+        });
     });
 </script>
