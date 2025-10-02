@@ -1,0 +1,39 @@
+[
+ 
+    {
+        "inputs": [
+            {"internalType": "string", "name": "_patientId", "type": "string"},
+            {"internalType": "string", "name": "_doctorName", "type": "string"},
+            {"internalType": "string", "name": "_disease", "type": "string"},
+            {"internalType": "string", "name": "_prescriptionText", "type": "string"}
+        ],
+        "name": "addHistory",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+
+   
+    {
+        "inputs": [
+            {"internalType": "string", "name": "_patientId", "type": "string"}
+        ],
+        "name": "getHistory",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "string", "name": "doctorName", "type": "string"},
+                    {"internalType": "string", "name": "disease", "type": "string"},
+                    {"internalType": "uint256", "name": "timestamp", "type": "uint256"},
+                    {"internalType": "string", "name": "prescriptionText", "type": "string"}
+                ],
+                "internalType": "struct HospitalChain.HistoryRecord[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+
+]
