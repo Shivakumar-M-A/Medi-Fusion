@@ -33,7 +33,8 @@ const db = mysql.createPool({
 }).promise();
 
 // --- BLOCKCHAIN SETUP ---
-const web3 = new Web3('http://localhost:8545'); 
+// In server.js:
+const web3 = new Web3('http://localhost:7545');
 
 // 🛠️ RESTORED: Read address from JSON file (Requires contractaddress.json)
 const { address: contractAddress } = require('./contractaddress.json'); 
@@ -42,7 +43,7 @@ const { address: contractAddress } = require('./contractaddress.json');
 const contractABI = require('./contractabi.json'); 
 
 // 🚨 ACTION REQUIRED: Set your sending account address here 🚨
-const senderAddress = 'YOUR_SENDER_ADDRESS_HERE';     
+const senderAddress = '0x39920E5B400B5987173EF3E185D6DDf56c8a2099';     
 
 const contract = new web3.eth.Contract(contractABI, contractAddress);
 
