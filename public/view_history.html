@@ -1,57 +1,68 @@
-<div id="history-section" class="mt-4">
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 id="history-header">Medical History</h2>
+        <a href="doctor_dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
     </div>
+    <div id="history-section">
+        </div>
+</div>
 
 <script>
-    // ... (omitted boilerplate code) ...
+    document.addEventListener('DOMContentLoaded', function() {
+        // ✅ ADDED: Get patient_id from URL and trigger history loading
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientId = urlParams.get('patient_id');
+        
+        if (patientId) {
+            document.getElementById('history-header').textContent = `Medical History for Patient #${patientId}`;
+            loadHistory(patientId);
+        } else {
+            alert("No Patient ID found. Please go back to the dashboard and select a patient.");
+            window.location.href = 'doctor_dashboard.html';
+        }
+    });
 
     async function loadHistory(patientId) {
-    const section = document.getElementById('history-section');
-    section.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'; // Loading spinner
+        const section = document.getElementById('history-section');
+        section.innerHTML = '<div class="text-center p-5">Loading history from blockchain...</div>';
 
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/history/${patientId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-             throw new Error(result.error || 'Failed to fetch history data.');
-        }
-
-        if (result.history && result.history.length > 0) {
-            section.innerHTML = ''; // Clear spinner
-            
-            result.history.forEach(rec => {
-                let contentHtml = '';
-                
-                // 🛠️ UPDATED: Always display content as pre-formatted text
-                contentHtml = `<pre class="mt-2 p-2 bg-light border rounded" style="white-space: pre-wrap; word-wrap: break-word;">${rec.data}</pre>`;
-                
-                section.innerHTML += `
-                    <div class="record my-3 p-3 bg-white border rounded">
-                        <p class="mb-1"><strong>Doctor:</strong> ${rec.doctorName}</p>
-                        <p class="mb-1"><strong>Diagnosis:</strong> ${rec.disease}</p>
-                        <p class="mb-2"><strong>Date:</strong> ${new Date(Number(rec.timestamp) * 1000).toLocaleString()}</p>
-                        <div>
-                            <strong>Prescription:</strong>
-                            ${contentHtml}
-                        </div>
-                        <p class="mt-2 mb-0 small text-muted">
-                            <strong>Transaction ID:</strong> ${rec.cid}
-                        </p>
-                    </div>
-                `;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/history/${patientId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-        } else {
-            section.innerHTML = '<div class="alert alert-info">No prescription history found for this patient.</div>';
+
+            const result = await response.json();
+            if (!response.ok) {
+                 throw new Error(result.error || 'Failed to fetch history data.');
+            }
+
+            if (result.history && result.history.length > 0) {
+                section.innerHTML = ''; // Clear loading message
+                
+                result.history.forEach(rec => {
+                    // ✅ CHANGED: Removed the "Transaction ID" line as `cid` is no longer provided by the API
+                    // The date is now parsed from a string timestamp.
+                    section.innerHTML += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Doctor:</strong> ${rec.doctorName}</p>
+                                <p class="mb-1"><strong>Diagnosis:</strong> ${rec.disease}</p>
+                                <p class="mb-2"><strong>Date:</strong> ${new Date(parseInt(rec.timestamp)).toLocaleString()}</p>
+                                <div>
+                                    <strong>Prescription:</strong>
+                                    <pre class="mt-2 p-3 bg-light border rounded" style="white-space: pre-wrap; word-wrap: break-word;">${rec.data}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                section.innerHTML = '<div class="alert alert-info">No prescription history found for this patient.</div>';
+            }
+        } catch (error) {
+            console.error("Error loading history:", error);
+            section.innerHTML = `<div class="alert alert-danger"><strong>Error:</strong> ${error.message}</div>`;
         }
-    } catch (error) {
-        console.error("Error loading history:", error);
-        section.innerHTML = `<div class="alert alert-danger"><strong>Error:</strong> ${error.message}</div>`;
     }
-}
 </script>

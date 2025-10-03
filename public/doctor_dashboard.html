@@ -25,7 +25,7 @@
 
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h3 class="mb-0">My Approved Appointments</h3>
+                <h3 class="mb-0">My Appointments</h3>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -40,8 +40,7 @@
                             </tr>
                         </thead>
                         <tbody id="appointments-table-body">
-                            <!-- Appointments will be loaded here dynamically -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -52,30 +51,27 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {
-                // For this example, let's assume a token is set. 
+                alert("You are not logged in. Redirecting to login page.");
                 // In a real app, you would redirect to login.
-                // window.location.href = '/doctor_login.html';
-                // For demonstration, let's mock a token if none exists.
-                if(!localStorage.getItem('token')) {
-                    // This is a placeholder for testing. Replace with your actual login flow.
-                    const fakePayload = { name: 'Test Doctor', id: 1, type: 'doctor' };
-                    const fakeToken = `header.${btoa(JSON.stringify(fakePayload))}.signature`;
-                    localStorage.setItem('token', fakeToken);
-                    location.reload(); // Reload to apply the new token
-                }
+                // window.location.href = '/doctor_login.html'; 
+                return;
             }
 
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.type !== 'doctor') {
+                    throw new Error("Invalid user type.");
+                }
                 document.getElementById('doctor-welcome').textContent = `Welcome, Dr. ${payload.name}`;
             } catch (e) {
-                console.error("Failed to decode token:", e);
-                // Clear bad token and reload
+                console.error("Failed to decode token or invalid token:", e);
                 localStorage.removeItem('token');
-                window.location.href = '/doctor_dashboard.html';
+                // window.location.href = '/doctor_login.html';
+                return;
             }
 
-            fetch('/api/my-appointments', {
+            // ✅ CHANGED: Updated API endpoint from '/api/my-appointments' to '/api/doctor/appointments'
+            fetch('/api/doctor/appointments', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => {
@@ -93,7 +89,7 @@
                 const tableBody = document.getElementById('appointments-table-body');
                 tableBody.innerHTML = '';
                 if (appointments.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">You have no approved appointments.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">You have no scheduled appointments.</td></tr>';
                 } else {
                     appointments.forEach(app => {
                         const row = `
