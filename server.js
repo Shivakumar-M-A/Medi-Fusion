@@ -14,6 +14,15 @@ require('dotenv').config();
 // --- INITIALIZATIONS ---
 const app = express();
 
+// --- SECURITY CHECK: Ensure essential environment variables are set ---
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+    console.error("FATAL ERROR: SESSION_SECRET is not defined in the .env file.");
+    process.exit(1); // Stop the application if the secret key is missing
+}
+
+
+
 // --- MIDDLEWARE ---
 app.use(cors()); 
 app.use(express.json());
@@ -159,69 +168,59 @@ app.post('/api/doctor/register', async (req, res) => {
 });
 
 // =============================================== //
-// === 3. API FOR LOGIN (Patient, Doctor, Hospital - FINAL LOOP-FREE FIX) === //
+// === 3. API FOR LOGIN (FINAL CORRECTED CODE) === //
 // =============================================== //
 
-/**
- * Shared function to handle the core login logic (DB lookup, hash check, JWT creation).
- */
-async function handleUserLogin(req, res, table, idField, type) {
-    // The email (ID) and password should be present in req.body
-    const { id, password } = req.body; 
+async function handleUserLogin(req, res, table, dbIdField, userType, formIdField) {
+    const id = req.body[formIdField];
+    const { password } = req.body; 
     
     if (!id || !password) {
-        return res.status(400).json({ success: false, error: 'ID and password are required for login.' });
+        return res.status(400).json({ success: false, error: `'${formIdField}' and 'password' are required for login.` });
     }
     
     try {
-        const [rows] = await db.execute(`SELECT * FROM ${table} WHERE ${idField} = ?`, [id]);
+        const [rows] = await db.execute(`SELECT * FROM ${table} WHERE ${dbIdField} = ?`, [id]);
 
         if (rows.length === 0) {
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
         }
 
         const user = rows[0];
-        
-        // Compare password hash
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(401).json({ success: false, error: 'Invalid credentials.' });
         }
         
-        // Generate JWT Token
         const token = jwt.sign(
-            { id: user[idField], name: user.name, type: type }, 
-            process.env.SESSION_SECRET || 'your_default_secret',
+            { id: user[dbIdField], name: user.name, type: userType }, 
+            SESSION_SECRET,
             { expiresIn: '1h' }
         );
 
-        res.json({ success: true, token, type, name: user.name });
+        res.json({ success: true, token, type: userType, name: user.name });
 
     } catch (e) {
-        console.error(`${type} Login error:`, e);
+        console.error(`${userType} Login error:`, e);
         res.status(500).json({ success: false, error: 'Login failed due to a server error.' });
     }
 }
 
-// 3.1 Patient Login (Handles POST /api/patient/login)
+// Patient login (searches the 'name' column)
 app.post('/api/patient/login', (req, res) => {
-    // Calls the shared function with patient-specific parameters
-    handleUserLogin(req, res, 'patients', 'patient_id', 'patient');
+    handleUserLogin(req, res, 'patients', 'name', 'patient', 'name');
 });
 
-// 3.2 Doctor Login (Handles POST /api/doctor/login)
+// Doctor login (searches the 'doctor_id' column)
 app.post('/api/doctor/login', (req, res) => {
-    // Calls the shared function with doctor-specific parameters
-    handleUserLogin(req, res, 'doctors', 'doctor_id', 'doctor');
+    handleUserLogin(req, res, 'doctors', 'doctor_id', 'doctor', 'email');
 });
 
-// 3.3 Hospital Login (Handles POST /api/hospital/login)
+// Hospital login (searches the 'email' column)
 app.post('/api/hospital/login', (req, res) => {
-    // Calls the shared function with hospital-specific parameters
-    handleUserLogin(req, res, 'hospitals', 'hospital_id', 'hospital');
+    handleUserLogin(req, res, 'hospitals', 'email', 'hospital', 'email');
 });
-
 // =============================================== //
 // === 4. API TO ADD PRESCRIPTION (TEXT ONLY) (MIGRATED) === //
 // =============================================== //
@@ -279,35 +278,63 @@ app.get('/api/history/:patientId', authenticateToken, async (req, res) => {
     }
 });
 
-// =============================================== //
-// === 6. API FOR HOSPITAL REGISTRATION (DEBUG) === //
-// =============================================== //
+// ==================================================== //
+// === 6. API FOR HOSPITAL REGISTRATION (CORRECTED) === //
+// ==================================================== //
 app.post('/api/hospital/register', async (req, res) => {
-    // --- STEP 1: LOG THE RAW INCOMING DATA ---
-    console.log("--- RAW HOSPITAL REGISTRATION DATA ---");
-    console.log(req.body); 
-    console.log("--------------------------------------");
-    
-    // --- STEP 2: STOP EXECUTION ---
-    // We stop here to prevent the 400 error and see the names of the fields.
-    // We send a success message so the client doesn't get an error state.
-    return res.status(200).json({ success: true, message: 'Debugging: Check server console for field names.' });
-    
-    // The rest of the original code goes below, but is currently unreachable.
+    try {
+        // Correctly get 'email' and alias it to 'id' for consistency
+       const { hospital_name: name, email: id, password } = req.body;
+
+        if (!id || !name || !password) {
+            return res.status(400).json({ success: false, error: 'Missing required fields for hospital registration.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Now, 'id' correctly contains the email and is used here
+        await db.execute(
+            'INSERT INTO hospitals (email, name, password) VALUES (?, ?, ?)',
+            [id, name, hashedPassword]
+        );
+
+        res.status(201).json({ success: true, message: 'Hospital registered successfully.' });
+
+    } catch (e) {
+        console.error("Hospital Registration error:", e);
+        if (e.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ success: false, error: 'Registration failed. The Email Address is already in use.' });
+        }
+        res.status(500).json({ success: false, error: 'Registration failed due to a server error.' });
+    }
 });
 
 
 
 
+app.get('/api/available-doctors', authenticateToken, async (req, res) => {
+    try {
+        const [doctors] = await db.execute('SELECT name, specialization FROM doctors');
+        res.json(doctors);
+    } catch (e) {
+        console.error("Error fetching available doctors:", e);
+        res.status(500).json({ error: 'Failed to fetch doctor data.' });
+    }
+});
 
-
-
-
-
-
-
-
-
+app.get('/api/all-appointments', authenticateToken, async (req, res) => {
+    try {
+        // TODO: Replace this dummy data with a real database query from your 'appointments' table.
+        const dummyAppointments = [
+            { id: 1, patient_name: 'John Doe', doctor_name: 'Dr. Smith', appointment_time: '2025-10-03 14:00', status: 'Pending' },
+            { id: 2, patient_name: 'Jane Roe', doctor_name: 'Dr. Paper', appointment_time: '2025-10-03 15:00', status: 'Confirmed' }
+        ];
+        res.json(dummyAppointments);
+    } catch (e) {
+        console.error("Error fetching all appointments:", e);
+        res.status(500).json({ error: 'Failed to fetch appointment data.' });
+    }
+});
 
 
 // ====================== //
